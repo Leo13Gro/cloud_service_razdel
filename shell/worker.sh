@@ -21,7 +21,7 @@ $VENV_DIR/bin/pip install flask redis razdel psycopg2-binary
 cat > /etc/systemd/system/$SERVICE_NAME.service <<EOF
 [Unit]
 Description=Razdel Analyzer Worker
-After=network.target redis-server.service postgresql.service
+After=network.target
 
 [Service]
 User=razdel
@@ -29,10 +29,9 @@ WorkingDirectory=$WORKER_DIR
 ExecStart=$VENV_DIR/bin/python $WORKER_DIR/worker.py
 Restart=always
 Environment=PORT=8000
-Environment=REDIS_URL=redis://localhost:6379/0
 Environment=REDIS_STREAM=jobs
 Environment=REDIS_GROUP=razdel_group
-EnvironmentFile=/opt/razdel/postgres.env
+EnvironmentFile=/opt/razdel/razdel.env
 
 [Install]
 WantedBy=multi-user.target

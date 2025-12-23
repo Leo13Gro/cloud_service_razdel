@@ -1,0 +1,75 @@
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: razdel
+      POSTGRES_USER: razdel_user
+      POSTGRES_PASSWORD: "12345"
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # init: положи SQL-инициализацию в ./db/init.sql (см. ниже)
+      - ./db/init.sql:/docker-entrypoint-initdb.d/001_init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U razdel_user -d razdel"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--appendonly", "no"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+
+  gateway:
+    build:
+      context: .
+      dockerfile: gateway/Dockerfile
+    environment:
+      # БД и Redis через имена сервисов compose
+      DATABASE_URL: postgresql://razdel_user:12345@postgres:5432/razdel
+      REDIS_URL: redis://redis:6379/0
+      REDIS_STREAM: jobs
+      HOST: 0.0.0.0
+      PORT: 5000
+      MAX_TEXT_BYTES: "2097152"
+    ports:
+      - "5000:5000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  worker:
+    build:
+      context: .
+      dockerfile: worker/Dockerfile
+    environment:
+      DATABASE_URL: postgresql://razdel_user:12345@postgres:5432/razdel
+      REDIS_URL: redis://redis:6379/0
+      REDIS_STREAM: jobs
+      REDIS_GROUP: razdel_group
+      # CONSUMER можно не задавать: берётся из HOSTNAME
+      PORT: 8000
+      STREAM_BLOCK_MS: "5000"
+      CLAIM_IDLE_MS: "60000"
+      CLAIM_COUNT: "10"
+      SLEEP_ON_EMPTY: "0.2"
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+volumes:
+  pgdata:
