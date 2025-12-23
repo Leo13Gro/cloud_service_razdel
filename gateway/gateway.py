@@ -19,6 +19,9 @@ DB_DSN = os.getenv("DATABASE_URL")  # required: postgresql://user:pass@host:5432
 MAX_TEXT_BYTES = int(os.getenv("MAX_TEXT_BYTES", str(2 * 1024 * 1024)))  # 2MB default
 # ==========================
 
+print(f"REDIS_URL={REDIS_URL}")
+print(f"REDIS_STREAM={REDIS_STREAM}")
+print(f"DB_DSN={DB_DSN}")
 if not DB_DSN:
     raise RuntimeError("DATABASE_URL env var is required")
 

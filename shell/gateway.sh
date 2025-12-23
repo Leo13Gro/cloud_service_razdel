@@ -10,13 +10,11 @@ apt update
 apt install -y python3 python3-venv python3-pip git
 
 useradd -r -s /bin/false razdel || true
-
 mkdir -p "$APP_DIR"
-# git clone создаст файлы root'ом, поэтому chown делаем ПОСЛЕ clone
+
 if [ ! -d "$APP_DIR/.git" ]; then
   git clone https://github.com/Leo13Gro/cloud_service_razdel.git "$APP_DIR"
 else
-  # если уже клонировали раньше — просто обновим
   git -C "$APP_DIR" pull
 fi
 
@@ -37,11 +35,15 @@ WorkingDirectory=$GATEWAY_DIR
 ExecStart=$VENV_DIR/bin/python $GATEWAY_DIR/gateway.py
 Restart=always
 
-# gateway.py читает REDIS_URL и REDIS_STREAM
+# Порт/хост для Flask
+Environment=HOST=0.0.0.0
+Environment=PORT=5000
+
+# Redis для очереди
 Environment=REDIS_URL=redis://localhost:6379/0
 Environment=REDIS_STREAM=jobs
 
-# в этом файле должен быть DATABASE_URL=postgresql://...
+# Должен содержать DATABASE_URL=postgresql://...
 EnvironmentFile=/opt/razdel/postgres.env
 
 [Install]
@@ -51,6 +53,4 @@ EOF
 systemctl daemon-reload
 systemctl enable $SERVICE_NAME
 systemctl restart $SERVICE_NAME
-
-# Удобно сразу увидеть, если упало
 systemctl --no-pager --full status $SERVICE_NAME || true

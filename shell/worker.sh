@@ -28,7 +28,10 @@ User=razdel
 WorkingDirectory=$WORKER_DIR
 ExecStart=$VENV_DIR/bin/python $WORKER_DIR/worker.py
 Restart=always
-Environment=localhost
+Environment=PORT=8000
+Environment=REDIS_URL=redis://localhost:6379/0
+Environment=REDIS_STREAM=jobs
+Environment=REDIS_GROUP=razdel_group
 EnvironmentFile=/opt/razdel/postgres.env
 
 [Install]
