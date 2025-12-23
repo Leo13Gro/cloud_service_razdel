@@ -41,3 +41,8 @@ CREATE TABLE IF NOT EXISTS results (
 SQL
 
 echo "Schema init complete."
+
+sudo -u postgres psql -d razdel -c "GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE jobs TO razdel_user;"
+sudo -u postgres psql -d razdel -c "GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE results TO razdel_user;"
+
+echo "Permissions granted."
