@@ -2,7 +2,8 @@
 set -e
 
 APP_DIR=/opt/razdel-worker
-VENV_DIR=$APP_DIR/venv
+WORKER_DIR=$APP_DIR/worker
+VENV_DIR=$WORKER_DIR/venv
 SERVICE_NAME=razdel-worker
 
 apt install -y python3 python3-venv python3-pip git
@@ -11,7 +12,9 @@ useradd -r -s /bin/false razdel || true
 mkdir -p $APP_DIR
 chown razdel:razdel $APP_DIR
 
-git clone <REPO_URL> $APP_DIR
+git clone https://github.com/Leo13Gro/cloud_service_razdel.git $APP_DIR
+chown -R razdel:razdel $APP_DIR
+
 python3 -m venv $VENV_DIR
 $VENV_DIR/bin/pip install flask redis razdel psycopg2-binary
 
@@ -22,11 +25,11 @@ After=network.target redis-server.service postgresql.service
 
 [Service]
 User=razdel
-WorkingDirectory=$APP_DIR
-ExecStart=$VENV_DIR/bin/python worker.py
+WorkingDirectory=$WORKER_DIR
+ExecStart=$VENV_DIR/bin/python $WORKER_DIR/worker.py
 Restart=always
-Environment=REDIS_HOST=localhost
-EnvironmentFile=/opt/razdel_db.env
+Environment=localhost
+EnvironmentFile=/opt/razdel/postgres.env
 
 [Install]
 WantedBy=multi-user.target

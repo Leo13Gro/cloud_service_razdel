@@ -121,3 +121,6 @@ def job_status(job_id: str):
     if result is not None:
         resp["result"] = result
     return jsonify(resp)
+
+if __name__ == "__main__":
+    app.run(host=os.getenv("HOST", "0.0.0.0"), port=int(os.getenv("PORT", "5000")))
